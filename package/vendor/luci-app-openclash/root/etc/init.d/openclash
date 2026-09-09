@@ -3855,8 +3855,11 @@ lg6851f_boot_network_ready()
 boot()
 {
    local boot_uptime=0 remaining=0 waited=0 initial_delay=90 check_interval=30 network_timeout=180
-   delay_start=$(uci_get_config "delay_start" || echo 0)
    enable=$(uci_get_config "enable")
+   # A disabled service must not run restart/stop cleanup during boot:
+   # that would restart dnsmasq while LAN clients are acquiring leases.
+   [ "$enable" = "1" ] || return 0
+   delay_start=$(uci_get_config "delay_start" || echo 0)
    if [ "$enable" == "1" ] &&
       [ "$(cat /tmp/sysinfo/board_name 2>/dev/null)" = "fiberhome,lg6851f" ]; then
       # A normal reboot preserves OpenClash's dnsmasq redirect in UCI while
